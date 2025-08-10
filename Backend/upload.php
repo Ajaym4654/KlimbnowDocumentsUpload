@@ -1,9 +1,3 @@
-I can certainly add the necessary CORS headers to your upload.php file. The headers need to be at the very top of the script to ensure they are sent before any other output.
-
-Here is your updated upload.php file with the CORS headers added.
-
-PHP
-
 <?php
 // Add CORS headers to allow requests from your Netlify frontend
 header("Access-Control-Allow-Origin: https://klimbnowdocumentsupload.netlify.app");
