@@ -1,7 +1,18 @@
-FROM php:8.1-cli
+FROM php:7.4-fpm
 
-WORKDIR /app
+# Install Nginx
+RUN apt-get update && apt-get install -y nginx
 
-COPY . /app
+# Copy custom Nginx config
+COPY nginx.conf /etc/nginx/sites-available/default
+RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
-CMD ["php", "-S", "0.0.0.0:10000"]
+# Set up the web root and copy application files
+WORKDIR /var/www/html
+COPY . .
+
+# Expose port 80 for Nginx
+EXPOSE 80
+
+# Start Nginx and PHP-FPM
+CMD service nginx start && php-fpm
