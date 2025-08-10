@@ -1,4 +1,15 @@
+I can certainly add the necessary CORS headers to your upload.php file. The headers need to be at the very top of the script to ensure they are sent before any other output.
+
+Here is your updated upload.php file with the CORS headers added.
+
+PHP
+
 <?php
+// Add CORS headers to allow requests from your Netlify frontend
+header("Access-Control-Allow-Origin: https://klimbnowdocumentsupload.netlify.app");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -38,12 +49,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $mail = new PHPMailer(true);
     try {
         $mail->isSMTP();
-        $mail->Host       = 'smtp.gmail.com';
-        $mail->SMTPAuth   = true;
-        $mail->Username   = 'ajaym4654@gmail.com';       // Your Gmail
-        $mail->Password   = 'yzgmxqxtesujfoel';          // Gmail App Password (no spaces)
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = 587;
+        $mail->Host         = 'smtp.gmail.com';
+        $mail->SMTPAuth     = true;
+        $mail->Username     = 'ajaym4654@gmail.com';     // Your Gmail
+        $mail->Password     = 'yzgmxqxtesujfoel';       // Gmail App Password (no spaces)
+        $mail->SMTPSecure   = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port         = 587;
 
         $mail->setFrom('ajaym4654@gmail.com', 'Candidate Document Upload');
         $mail->addAddress('ajaym4654@gmail.com');        // Where you receive docs
