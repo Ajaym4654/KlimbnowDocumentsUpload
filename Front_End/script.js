@@ -1,3 +1,4 @@
+// Improved JS with better error reporting and timeout + dynamic URL
 document.addEventListener('DOMContentLoaded', function(){
   const form = document.getElementById('uploadForm');
   const fileInput = document.getElementById('documents');
@@ -29,7 +30,9 @@ document.addEventListener('DOMContentLoaded', function(){
     renderFiles();
   }
 
-  dropZone.addEventListener('click', ()=> fileInput.click());
+  // This line was removed as it conflicts with the CSS transparent overlay fix
+  // dropZone.addEventListener('click', ()=> fileInput.click());
+  
   fileInput.addEventListener('change', (e)=> {
     addFiles(e.target.files);
     fileInput.value = '';
