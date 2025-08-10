@@ -93,8 +93,8 @@ input:focus {
     background: #f9f9ff;
     transition: background 0.3s, transform 0.3s;
     /* --- KEY FIXES FOR MOBILE COMPATIBILITY --- */
-    position: relative; /* Establishes a positioning context for child elements */
-    overflow: hidden; /* Ensures the input doesn't expand beyond the boundary */
+    position: relative;
+    overflow: hidden;
 }
 
 /* This is the key fix! It makes the file input a transparent, full-size overlay */
@@ -106,7 +106,10 @@ input:focus {
     height: 100%;
     opacity: 0;
     cursor: pointer;
-    z-index: 10; /* Ensures it is on top of the text */
+    z-index: 10;
+    /* --- NEW FIXES FOR MOBILE --- */
+    /* Ensure a large, tappable area on mobile */
+    font-size: 1000px;
 }
 
 .drop-zone:hover {
