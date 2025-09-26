@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mail->Port         = 587;
 
         $mail->setFrom('ajaym4654@gmail.com', 'Candidate Document Upload');
-        $mail->addAddress('ajaym4654@gmail.com');        // Where you receive docs
+        $mail->addAddress('ajay.m@klimbnow.com');        // Where you receive docs
 
         // Attach uploaded files
         foreach ($uploadedFiles as $filePath) {
