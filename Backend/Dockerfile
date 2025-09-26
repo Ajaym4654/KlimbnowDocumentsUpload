@@ -5,7 +5,6 @@ RUN apt-get update && apt-get install -y nginx
 
 # Copy custom Nginx config
 COPY nginx.conf /etc/nginx/sites-available/default
-RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 # Set up the web root and copy application files
 WORKDIR /var/www/html
