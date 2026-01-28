@@ -1,80 +1,113 @@
 <?php
-// Add CORS headers to allow requests from your Netlify frontend
-header("Access-Control-Allow-Origin: https://klimbnowdocumentsupload.netlify.app");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
-// Handle preflight OPTIONS request
+// =====================
+// CORS SETTINGS
+// =====================
+header("Access-Control-Allow-Origin: https://klimbnowdocumentsupload.netlify.app");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
+header("Content-Type: application/json");
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
+// =====================
+// PHPMailer Load
+// =====================
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// Load PHPMailer classes
-require 'PHPMailer/src/Exception.php';
-require 'PHPMailer/src/PHPMailer.php';
-require 'PHPMailer/src/SMTP.php';
+require __DIR__ . '/PHPMailer/src/Exception.php';
+require __DIR__ . '/PHPMailer/src/PHPMailer.php';
+require __DIR__ . '/PHPMailer/src/SMTP.php';
 
-// Always send JSON response
-header('Content-Type: application/json');
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name  = $_POST['name'] ?? '';
-    $email = $_POST['email'] ?? '';
-
-    // Create uploads folder if not exists
-    $uploadDir = __DIR__ . '/uploads/';
-    if (!file_exists($uploadDir)) {
-        mkdir($uploadDir, 0777, true);
-    }
-
-    $uploadedFiles = [];
-
-    // Handle multiple file uploads
-    if (!empty($_FILES['documents']['name'][0])) {
-        foreach ($_FILES['documents']['name'] as $key => $filename) {
-            $tmpName    = $_FILES['documents']['tmp_name'][$key];
-            $targetFile = $uploadDir . basename($filename);
-
-            if (move_uploaded_file($tmpName, $targetFile)) {
-                $uploadedFiles[] = $targetFile;
-            }
-        }
-    }
-
-    // Send email with attachments
-    $mail = new PHPMailer(true);
-    try {
-        $mail->isSMTP();
-        $mail->Host         = 'smtp.gmail.com';
-        $mail->SMTPAuth     = true;
-        $mail->Username     = 'ajaym4654@gmail.com';     // Your Gmail
-        $mail->Password     = 'yzgmxqxtesujfoel';       // Gmail App Password (no spaces)
-        $mail->SMTPSecure   = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port         = 587;
-
-        $mail->setFrom('ajaym4654@gmail.com', 'Candidate Document Upload');
-        $mail->addAddress('ajay.m@klimbnow.com');        // Where you receive docs
-
-        // Attach uploaded files
-        foreach ($uploadedFiles as $filePath) {
-            $mail->addAttachment($filePath);
-        }
-
-        // Email body
-        $mail->isHTML(true);
-        $mail->Subject = 'New Candidate Documents Uploaded';
-        $mail->Body    = "Name: {$name}<br>Email: {$email}";
-
-        $mail->send();
-        echo json_encode(['status' => 'success', 'message' => 'Documents sent successfully']);
-    } catch (Exception $e) {
-        echo json_encode(['status' => 'error', 'message' => $mail->ErrorInfo]);
-    }
-} else {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
+// =====================
+// Validate Request
+// =====================
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid request']);
+    exit;
 }
-?>
+
+$name  = $_POST['name'] ?? '';
+$email = $_POST['email'] ?? '';
+
+if (!$name || !$email) {
+    echo json_encode(['status' => 'error', 'message' => 'Name and Email required']);
+    exit;
+}
+
+// =====================
+// Upload Files
+// =====================
+$uploadDir = __DIR__ . '/uploads/';
+if (!file_exists($uploadDir)) {
+    mkdir($uploadDir, 0777, true);
+}
+
+$uploadedFiles = [];
+
+if (!empty($_FILES['documents']['name'][0])) {
+    foreach ($_FILES['documents']['name'] as $key => $filename) {
+
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $allowed = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
+
+        if (!in_array($ext, $allowed)) {
+            continue;
+        }
+
+        $tmpName = $_FILES['documents']['tmp_name'][$key];
+        $newName = time() . "_" . basename($filename);
+        $target  = $uploadDir . $newName;
+
+        if (move_uploaded_file($tmpName, $target)) {
+            $uploadedFiles[] = $target;
+        }
+    }
+}
+
+// =====================
+// SEND EMAIL (BREVO)
+// =====================
+$mail = new PHPMailer(true);
+
+try {
+    $mail->isSMTP();
+    $mail->Host = 'smtp-relay.brevo.com';
+    $mail->SMTPAuth = true;
+    $mail->Username = 'apikey';
+    $mail->Password = getenv('SMTP_PASS'); // From Render ENV
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Port = 587;
+
+    $mail->setFrom('ajaym4654@gmail.com', 'Klimbnow Documents');
+    $mail->addAddress('ajay.m@klimbnow.com');
+
+    foreach ($uploadedFiles as $file) {
+        $mail->addAttachment($file);
+    }
+
+    $mail->isHTML(true);
+    $mail->Subject = "New Candidate Documents";
+    $mail->Body = "
+        <h3>New Upload Received</h3>
+        <p><strong>Name:</strong> {$name}</p>
+        <p><strong>Email:</strong> {$email}</p>
+    ";
+
+    $mail->send();
+
+    echo json_encode([
+        'status' => 'success',
+        'message' => 'Documents sent successfully'
+    ]);
+
+} catch (Exception $e) {
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Mail failed: ' . $mail->ErrorInfo
+    ]);
+}
