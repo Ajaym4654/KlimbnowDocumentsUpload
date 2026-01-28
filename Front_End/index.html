@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Candidate Document Upload</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
@@ -19,7 +20,9 @@
     <section class="card">
       <h2>Details and Documents</h2>
 
-      <form id="uploadForm" enctype="multipart/form-data">
+      <form id="uploadForm" method="POST" enctype="multipart/form-data"
+      action="https://klimbnowdocumentsupload.onrender.com/Backend/upload.php">
+
 
         <label class="field">
           <span>Name</span>
@@ -75,6 +78,7 @@
       <a href="mailto:ajay.m@klimbnow.com">Contact Us</a>
     </p>
   </footer>
+<script src="script.js"></script>
 
 </body>
 </html>
