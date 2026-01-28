@@ -4,10 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Candidate Document Upload</title>
-  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
+
   <header class="header">
     <div class="brand">
       <img src="images/logo.png" alt="Klimbnow Logo" class="logo">
@@ -19,51 +19,62 @@
     <section class="card">
       <h2>Details and Documents</h2>
 
-      <form id="uploadForm" enctype="multipart/form-data" method="POST" action="https://klimbnowdocumentsupload.onrender.com/upload.php" autocomplete="off">
-        
+      <form id="uploadForm" enctype="multipart/form-data">
+
         <label class="field">
           <span>Name</span>
-          <input type="text" name="name" id="name" required placeholder="Full name">
+          <input type="text" name="name" required placeholder="Full name">
         </label>
 
         <label class="field">
           <span>Email</span>
-          <input type="email" name="email" id="email" required placeholder="you@example.com">
+          <input type="email" name="email" required placeholder="you@example.com">
         </label>
 
         <label class="field">
-          <span>Upload documents (drag files here or click to select multiple)</span>
+          <span>Upload documents</span>
           <div id="dropZone" class="drop-zone">
-  <input type="file" name="documents[]" id="documents" multiple>
-  <div class="dz-text">Drag & drop files here or click to browse</div>
-</div>
+            <input type="file" name="documents[]" id="documents" multiple>
+            <div class="dz-text">Drag & drop files here or click to browse</div>
+          </div>
         </label>
 
-        <div class="file-list" id="fileList"></div>
-        <div class="hint">Allowed: any file type. Max ~20MB per file.</div>
+        <div id="fileList" class="file-list"></div>
 
-        <button id="submitBtn" class="btn" type="submit">Send Documents</button>
-
-        <h3><div id="progressWrap" class="progress-wrap" aria-hidden="true">
-          <div id="progressBar" class="progress-bar"></div>
-          <div id="progressText" class="progress-text">Uploading...</div></h3>
+        <div class="hint">
+          Allowed: any file type. Max ~20MB per file.
         </div>
 
-        <div id="message" class="message" role="status" aria-live="polite"></div>
+        <button id="submitBtn" class="btn" type="submit">
+          Send Documents
+        </button>
+
+        <div id="progressWrap" class="progress-wrap" aria-hidden="true">
+          <div id="progressBar" class="progress-bar"></div>
+          <div id="progressText" class="progress-text">Uploading...</div>
+        </div>
+
+        <div id="message" class="message" role="status"></div>
+
       </form>
     </section>
 
     <section class="info">
       <h3>Why this portal?</h3>
-      <p>No accounts, no hassle. You provide name, email & docs — I get them and proceed with your application.</p>
+      <p>
+        No accounts, no hassle. You provide name, email & docs —
+        I get them and proceed with your application.
+      </p>
     </section>
   </main>
 
   <footer class="footer">
     <p>© 2025 Klimbnow. All rights reserved.</p>
-    <p>Made with ❤️ by Ajay | <a href="mailto:ajay.m@klimbnow.com">Contact Us</a></p>
+    <p>
+      Made with ❤️ by Ajay |
+      <a href="mailto:ajay.m@klimbnow.com">Contact Us</a>
+    </p>
   </footer>
 
-  <script src="script.js"></script>
 </body>
 </html>
