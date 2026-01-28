@@ -1,127 +1,147 @@
-// Improved JS with better error reporting and timeout + dynamic URL
-document.addEventListener('DOMContentLoaded', function(){
-  const form = document.getElementById('uploadForm');
-  const fileInput = document.getElementById('documents');
-  const dropZone = document.getElementById('dropZone');
-  const fileList = document.getElementById('fileList');
-  const progressWrap = document.getElementById('progressWrap');
-  const progressBar = document.getElementById('progressBar');
-  const progressText = document.getElementById('progressText');
-  const message = document.getElementById('message');
+document.addEventListener('DOMContentLoaded', function () {
 
-  let files = [];
+  const form = document.getElementById('uploadForm');
+  const fileInput = document.getElementById('documents');
+  const dropZone = document.getElementById('dropZone');
+  const fileList = document.getElementById('fileList');
+  const progressWrap = document.getElementById('progressWrap');
+  const progressBar = document.getElementById('progressBar');
+  const progressText = document.getElementById('progressText');
+  const message = document.getElementById('message');
 
-  function renderFiles(){
-    fileList.innerHTML = '';
-    files.forEach((f, idx) => {
-      const div = document.createElement('div');
-      div.className = 'file-item';
-      div.innerHTML = '<div class="file-name">'+escapeHtml(f.name)+'</div><button class="remove-btn" data-i="'+idx+'">Remove</button>';
-      fileList.appendChild(div);
-    });
-  }
+  let files = [];
 
-  function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function escapeHtml(text) {
+    return text.replace(/[&<>"']/g, function (m) {
+      return ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      })[m];
+    });
+  }
 
-  function addFiles(newFiles){
-    for(let i=0;i<newFiles.length;i++){
-      files.push(newFiles[i]);
-    }
-    renderFiles();
-  }
+  function renderFiles() {
+    fileList.innerHTML = '';
+    files.forEach((file, i) => {
+      const div = document.createElement('div');
+      div.className = 'file-item';
+      div.innerHTML = `
+        <span>${escapeHtml(file.name)}</span>
+        <button type="button" data-i="${i}" class="remove-btn">Remove</button>
+      `;
+      fileList.appendChild(div);
+    });
+  }
 
-  // This line was removed as it conflicts with the CSS transparent overlay fix
-  // dropZone.addEventListener('click', ()=> fileInput.click());
-  
-  fileInput.addEventListener('change', (e)=> {
-    addFiles(e.target.files);
-    fileInput.value = '';
-  });
+  function addFiles(newFiles) {
+    for (let i = 0; i < newFiles.length; i++) {
+      files.push(newFiles[i]);
+    }
+    renderFiles();
+  }
 
-  dropZone.addEventListener('dragover', (e)=> { e.preventDefault(); dropZone.classList.add('drag'); });
-  dropZone.addEventListener('dragleave', (e)=> { dropZone.classList.remove('drag'); });
-  dropZone.addEventListener('drop', (e)=> {
-    e.preventDefault();
-    dropZone.classList.remove('drag');
-    if(e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
-  });
+  fileInput.addEventListener('change', e => {
+    addFiles(e.target.files);
+    fileInput.value = '';
+  });
 
-  fileList.addEventListener('click', (e)=> {
-    if(e.target.matches('.remove-btn')){
-      const i = Number(e.target.getAttribute('data-i'));
-      files.splice(i,1);
-      renderFiles();
-    }
-  });
+  dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.classList.add('drag');
+  });
 
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
-    message.textContent = '';
-    if(files.length === 0){ message.style.color='red'; message.textContent = 'Please add at least one file.'; return; }
-    if(!navigator.onLine){ message.style.color='red'; message.textContent = 'You appear to be offline. Check your connection.'; return; }
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('drag');
+  });
 
-    const fd = new FormData();
-    fd.append('name', document.getElementById('name').value);
-    fd.append('email', document.getElementById('email').value);
-    for(let i=0;i<files.length;i++){
-      fd.append('documents[]', files[i], files[i].name);
-    }
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag');
+    if (e.dataTransfer.files.length) {
+      addFiles(e.dataTransfer.files);
+    }
+  });
 
-    const xhr = new XMLHttpRequest();
-    // dynamic URL: use form.action so it works on any domain/path
-    const url = form.action;
-    xhr.open('POST', url, true);
-    xhr.timeout = 120000; // 2 minutes
+  fileList.addEventListener('click', e => {
+    if (e.target.classList.contains('remove-btn')) {
+      const i = Number(e.target.dataset.i);
+      files.splice(i, 1);
+      renderFiles();
+    }
+  });
 
-    xhr.upload.addEventListener('progress', function(ev){
-      if(ev.lengthComputable){
-        const pct = Math.round((ev.loaded / ev.total) * 100);
-        progressWrap.style.display = 'block';
-        progressBar.style.width = pct + '%';
-        progressText.textContent = 'Uploading ' + pct + '%';
-      }
-    });
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
 
-    xhr.onerror = function(){
-      progressWrap.style.display = 'none';
-      message.style.color = '#b02a37';
-      message.textContent = 'Network error while sending files (possible CORS, blocked request, or offline). Status: 0';
-    };
-    xhr.ontimeout = function(){
-      progressWrap.style.display = 'none';
-      message.style.color = '#b02a37';
-      message.textContent = 'Upload timed out. Server may be slow or blocking uploads.';
-    };
+    message.textContent = '';
+    message.style.color = '';
 
-    xhr.onreadystatechange = function(){
-      if(xhr.readyState === 4){
-        progressWrap.style.display = 'none';
-        if(xhr.status === 200){
-          try{
-            const res = JSON.parse(xhr.responseText);
-            if(res.success){
-              message.style.color = 'green';
-              message.textContent = res.message || 'Uploaded successfully!';
-              form.reset();
-              files = [];
-              renderFiles();
-              progressBar.style.width = '0%';
-            } else {
-              message.style.color = '#b02a37';
-              message.textContent = res.message || 'Upload failed';
-            }
-          }catch(err){
-            message.style.color = '#b02a37';
-            message.textContent = 'Unexpected server response: ' + xhr.responseText;
-          }
-        } else {
-          // status 0 handled in xhr.onerror; here handle other HTTP errors
-          message.style.color = '#b02a37';
-          message.textContent = 'Upload failed. Server error. Status: ' + xhr.status + ' Response: ' + xhr.responseText;
-        }
-      }
-    };
+    if (!files.length) {
+      message.style.color = 'red';
+      message.textContent = 'Please upload at least one file.';
+      return;
+    }
 
-    xhr.send(fd);
-  });
+    const fd = new FormData();
+    fd.append('name', document.getElementById('name').value);
+    fd.append('email', document.getElementById('email').value);
+    files.forEach(f => fd.append('documents[]', f));
+
+    const xhr = new XMLHttpRequest();
+
+    // ✅ IMPORTANT: Correct backend path
+    xhr.open('POST', 'https://klimbnowdocumentsupload.onrender.com/Backend/upload.php', true);
+
+    xhr.timeout = 120000;
+
+    xhr.upload.onprogress = function (e) {
+      if (e.lengthComputable) {
+        const pct = Math.round((e.loaded / e.total) * 100);
+        progressWrap.style.display = 'block';
+        progressBar.style.width = pct + '%';
+        progressText.textContent = 'Uploading ' + pct + '%';
+      }
+    };
+
+    xhr.onerror = function () {
+      progressWrap.style.display = 'none';
+      message.style.color = 'red';
+      message.textContent = 'Network error. Server not reachable.';
+    };
+
+    xhr.ontimeout = function () {
+      progressWrap.style.display = 'none';
+      message.style.color = 'red';
+      message.textContent = 'Upload timeout. Try again.';
+    };
+
+    xhr.onload = function () {
+      progressWrap.style.display = 'none';
+
+      try {
+        const res = JSON.parse(xhr.responseText);
+
+        if (res.status === 'success') {
+          message.style.color = 'green';
+          message.textContent = '✅ Documents sent successfully!';
+          form.reset();
+          files = [];
+          renderFiles();
+          progressBar.style.width = '0%';
+        } else {
+          message.style.color = 'red';
+          message.textContent = res.message || 'Upload failed';
+        }
+
+      } catch (e) {
+        message.style.color = 'red';
+        message.textContent = 'Server returned invalid response.';
+      }
+    };
+
+    xhr.send(fd);
+  });
 });
